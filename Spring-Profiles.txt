@@ -1,1 +1,57 @@
 Profiles
+========
+In Spring Boot, profiles are a way to segregate parts of your application configuration and make it available only in certain environments. This is particularly useful for managing different configurations for development, testing, and production environments.
+Creating Profiles
+================
+Step 1: Define Profile-Specific Properties Files
+======
+Create separate properties files for each profile. For example:
+
+application-dev.properties for the development environment.
+application-prod.properties for the production environment.
+
+Step 2: Add Profile-Specific Properties
+======
+Add the configuration settings specific to each profile in their respective properties files. For example, in application-dev.properties:
+
+spring.datasource.url=jdbc:mysql://localhost:3306/dev_db
+spring.datasource.username=dev_user
+spring.datasource.password=dev_password
+And in application-prod.properties:
+
+spring.datasource.url=jdbc:mysql://localhost:3306/prod_db
+spring.datasource.username=prod_user
+spring.datasource.password=prod_password
+Step 3: Activate Profiles
+======
+You can activate a profile in several ways:
+In application.properties
+You can also specify the active profile in the application.properties file:
+
+spring.profiles.active=dev
+Step 4: Use @Profile Annotation for Beans
+======
+You can create beans that are only available in certain profiles using the @Profile annotation. For example:
+
+@Configuration
+@Profile("dev")
+public class DevConfig {
+    @Bean
+    public DataSource dataSource() {
+        return new DataSource("dev_db_url", "dev_user", "dev_password");
+    }
+}
+
+@Configuration
+@Profile("prod")
+public class ProdConfig {
+    @Bean
+    public DataSource dataSource() {
+        return new DataSource("prod_db_url", "prod_user", "prod_password");
+    }
+}
+Step 5: Verify Profile Activation
+======
+Run your application and verify that the correct profile-specific configurations are being used. You can check the logs to see which profile is active.
+
+The order of precedence when there are conflicting properties across multiple active profiles. In Spring Boot, when multiple profiles are active, the properties from the last profile listed will override those from earlier profiles if there are conflicts.

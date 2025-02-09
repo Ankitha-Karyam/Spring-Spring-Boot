@@ -1,0 +1,270 @@
+The Spring framework can be considered as a collection of sub-frameworks, also called layers, such as Spring AOP. Spring Object-Relational Mapping (Spring ORM). Spring Web Flow, and Spring Web MVC. It is a lightweight application framework used for developing enterprise applications. You can use any of these modules separately while constructing a Web application. The modules may also be grouped together to provide better functionalities in a Web application. Spring framework is loosely coupled because of dependency Injection.
+
+Bean
+====
+A bean is an object that is managed by the Spring IoC (Inversion of Control) container. Beans are the backbone of a Spring application, and they are created, configured, and managed by the Spring container.
+
+Creating a Bean
+===============
+1.Using @component,@Service,@controller..
+2.Using @configuration and @Bean
+
+Java Bean
+=========
+A general java class thta follows specific conventions
+1.Properties:private fields with public getters and setters methods.
+2.No-arg construction: A public no arg constructor.
+3.Serializable: Implements the serializable interfaces.
+
+POJO
+====
+Its a simple java object that doesn't adhere to any special restrictions other that those forced by java lang specifications.It is not bound any special framework or convention making it lightweight and easy. 
+
+Inversion of Control(IoC)
+=========================
+Inversion of Control (IoC) is a design principle used in the Spring Framework to manage the creation and lifecycle of objects. Here's a simple way to understand it:
+
+Imagine you're building a house. Normally, you would have to hire all the workers (plumbers, electricians, etc.) yourself and manage their work. This can be quite a hassle.
+
+With IoC, it's like hiring a contractor who takes care of everything for you. The contractor hires the workers, ensures they do their jobs correctly, and manages the entire construction process. You just tell the contractor what you need, and they handle the rest.
+
+In the context of Spring, IoC means that the framework takes care of creating and managing the objects (beans) your application needs. You just define what you need, and Spring handles the rest, making your code cleaner and easier to maintain.
+
+Application Context
+===================
+Its the implementation of Spring IoC Container which will stores and manages all the beans inside your application.
+
+Let me clarify so application context stores all the beans in the application. so when we need to use a service(which is bean) 
+1.Need to intialize the spring context using AnnotationConfigApplicationContext, which loads the configuration from AppConfig.
+2.context.getBean(BookService.class) - Retrieves the BookService bean from the Spring context.
+3.bookService.addBook(..)- Adds books to the service.
+
+Bean factory
+============
+Bean factory is the simplest container providing basic DI support.
+It does not provide advanced features like event propagation,declarative mechanisms to create a bean,or various ways to look up.
+
+When to use
+===========
+BeanFactory: Use it when you need a lightweight container with minimal memory footprint and don't require the advanced features of ApplicationContext.
+
+ApplicationContext: Use it for most applications, especially when you need advanced features like event handling, AOP, and internationalization.
+
+Customizing the nature of a bean in lifecycle
+=============================================
+pojo class is created-> start spring container -> bean creation(@componnet) -> dependency injection -> [custom action after bean creation] ->ready to use -> [Custom action before destroy bean] -> bean is destroyed -> application stop
+
+What are custom actions while bean creation
+============================================
+. Let the bean perform certain actions upon intialization and destruction of your beans.
+. Perform actions after bean creation.
+. Perform actions before destroying bean.
+
+(Old Methods)
+============
+IntializationBean (custom action after bean is created)
+=================
+-> Here we implement IntializationBean interface.
+-> Then we can overide the method in it which is "afterPropertiesSet()"
+-> Here we can write the init actions like intailizing db connnections etc.,
+
+DisposableBean (custom actions before bean is destroyed)
+==============
+-> Here we implement this interface similarly.
+-> Here we will overide method "destroy()"
+-> it will call only if application is stopped
+-> to demomstrate it we need to stop the application explicitly using "applicationContext.close()" in the main class.
+
+(New Methods)
+=============
+@PostConstruct
+==============
+-> We can just write a method which needs to be called after bean is created.
+-> Annotate it with @PostConstruct easy!!!!!
+
+@PreDestroy
+===========
+->similar way 
+
+Bean Creation
+============
+Eager intialization
+==================
+-> When we start application
+-> Eg Bean with singleton Scope
+
+Lazy Intialization
+==================
+-> When Beans are needed
+-> Eg beans with prototype
+-> @Lazy annotation
+
+Spring Bean Scopes
+==================
+Spring bean scope determines how long a bean will live (its lifespan) and when it will be created and destroyed. It sets the rules for the lifecycle of the bean within the Spring container.
+
+Singleton Scope
+===============
+Singleton scope in Spring means that only one instance of the bean is created and shared across the entire Spring container. This single instance is used by all the components that need it.
+-> If we are not defining any scope of the bean then the default scope will be singleton.
+-> If we want to be specific we can use @Scope("singleton")
+-> Lets say we have injected User dependency in one or many beans then the same bean will be used across the application.
+-> it is eager intialization mean it is initialized when the application is started.
+
+Prototype Scope
+===============
+A new bean is created every time it is needed, and it lives only for that specific use.
+-> @Scope("prototype")
+-> Lets say we have injected user bean(prototype) in employee bean(singleton) then so when they are called employee is intialized but user is not initialied when but when we test the api then only it is initialized.
+-> It is called lazy intialization mean it is initialized only when it is needed.
+-> Each time a new instance/object is created.
+
+Request Scope
+=============
+The bean lives for the duration of single HTTP request.
+->When we try to inject request bean inside the singleton bean it creates a problem unless there is a ongoing api running.
+-> to solve the like when we want to inject request bean in singleton bean without any ongoing request then we can use "proxyMode"
+
+@Scope(value = "request" ,proxyMode = ScopedProxyMode.TARGET_CLASS)
+
+->It will not be a actual object rather it will be a proxy.
+
+Session Scope
+=============
+The bean lives for the duration of Http session.
+-> New Object/Beam per HTTP session
+-> lazily initialized
+-> when user access any api,session is created
+-> Remains active till session is expired
+
+Add point: to close the session
+request.getSession().invalidate();
+(can be used in the loggout)
+
+.hashCode() is used to get the hascode of the object.
+
+@Qualifier
+==========
+The @Qualifier annotation is used to resolve ambiguity when multiple beans of the same type are present in the Spring context. It allows you to specify exactly which bean should be injected.
+
+Example:
+========
+Imagine you have two types of coffee machines in your office: an espresso machine and a drip coffee machine. If you just ask for a "coffee machine," it might be unclear which one you mean. By using @Qualifier, you can specify exactly which coffee machine you want.
+
+@Component("espressoMachine")
+public class EspressoMachine implements CoffeeMachine {
+   
+}
+@Component("dripCoffeeMachine")
+public class DripCoffeeMachine implements CoffeeMachine {
+
+}
+@Component
+public class CoffeeService {
+    @Autowired
+    @Qualifier("espressoMachine")
+    private CoffeeMachine coffeeMachine;  
+}
+
+
+In this example, @Qualifier("espressoMachine") tells Spring to inject the EspressoMachine bean.
+
+-> When we are injecting in the ocnstructor then we can use like
+
+private final CoffeeMachine coffeeMachine;
+public checkout(@Qualifier("expressoMachine") CoffeeMachine coffeeMachine){
+
+}
+
+@Primary
+========  
+The @Primary annotation is used to give higher preference to a bean when multiple beans of the same type are available. If no @Qualifier is specified, Spring will inject the bean marked with @Primary.
+
+Example:
+========
+Continuing with the coffee machine analogy, if you want the espresso machine to be the default choice whenever a coffee machine is needed, you can mark it with @Primary.
+
+@Component
+public class DripCoffeeMachine implements CoffeeMachine {
+    // Implementation
+}
+
+@Primary
+@Component
+public class EspressoMachine implements CoffeeMachine {
+    // Implementation
+}
+
+@Component
+public class CoffeeService {
+    @Autowired
+    private CoffeeMachine coffeeMachine;
+}
+In this case, Spring will inject the EspressoMachine bean by default because it is marked with @Primary.
+
+what if both @Qulifier and @Primary are used 
+============================================
+When both @Qualifier and @Primary annotations are used together, the @Qualifier annotation takes precedence over @Primary. This means that if you specify a bean using @Qualifier, Spring will inject that specific bean, even if another bean is marked with @Primary.
+
+What happens when you run application
+=====================================
+Sure, let's go through the general steps of how a Spring application works when it involves dependency injection and the @PostConstruct annotation:
+
+1.Spring Container Initialization:
+The Spring container starts up and begins scanning for components (beans) to manage. This is part of the Spring framework's initialization process.
+
+2.Bean Creation:
+The Spring container identifies the beans based on component scanning or configuration.
+Each bean is created by the Spring container. If a bean has a constructor with print statements or other initialization logic, that logic is executed during the bean's creation.
+
+3.Dependency Injection:
+For each bean that has dependencies (other beans injected into it), the Spring container injects the required dependencies. This means that the dependent beans are made available to the bean that needs them.
+
+4.PostConstruct Method Execution:
+After a bean is fully initialized and its dependencies are injected, the Spring container automatically calls any method annotated with @PostConstruct in that bean.
+The @PostConstruct method can contain initialization logic that needs to be executed after the bean is created and dependencies are set. This method can reference the injected dependencies and perform any necessary setup or initialization tasks.
+
+5.Application Context Ready:
+Once all beans are created, dependencies are injected, and @PostConstruct methods are executed, the application context is fully initialized and ready to use.
+At this point, the application can start handling requests or performing its intended functions, with all beans properly set up and ready to interact with each other.
+This process ensures that all beans are created, dependencies are injected, and any necessary initialization logic is executed before the application starts handling its main tasks.
+
+
+@ConditionalOnProperty
+======================
+
+Purpose: Conditionally register beans based on configuration properties.
+Use Cases: Feature toggles, environment-specific beans, optional components.
+
+Example
+=======
+@Bean
+@ConditionalOnProperty(prefix = "feature", name = "enabled", havingValue = "true" matchMissing="false)
+public MyBean myBean() {
+    return new MyBean();
+}
+
+-> Here it will check this key value pair in application.properties
+feature.enabled=true
+then it will create the bean if its false then it dont 
+-> if the value of matchMissing is true then it will inject even the config is missing in application.properties vice versa
+-> if the injection of bean is there then we need to config it as 
+@Autowired(required=false) because the application will fail if bean is not creating.
+
+Advantages of @ConditionalOnProperty:
+====================================
+. Toggling of feature
+. Avoid cluttering application context with unnecessary beans
+. save memory
+. reduce application startup time
+
+Disadvantages of @ConditionalOnProperty:
+=========================================
+. miscofiguration can happen
+. code complexity increases when over used
+. complexity in managing 
+
+
+
+
+

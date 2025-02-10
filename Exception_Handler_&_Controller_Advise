@@ -1,1 +1,74 @@
-Exc
+Traditional way of Handling Exception
+=====================================
+-> We handle exception for API like the below code
+	@GetMapping("/getUser/{id}")
+	public ResponseEntity<?> gtUser(@PathVariable int id) throws UserNotFoundException {
+	
+			User user = userService.getUser(id)
+					.orElseThrow(() -> new UserNotFoundException("uSER NOT FOUND WITH ID: " + id));
+
+			return new ResponseEntity<>(user, HttpStatus.OK);
+  }
+
+-> But here the response message will not be readable to the user when user is not found in the db.
+-> So we handle the exception using try catch method by returning the response from the error response.
+-> We handle exceptions by using ErrorResponse entity with localtime,message and details of the error message.
+	@GetMapping("/getUser/{id}")
+	public ResponseEntity<?> gtUser(@PathVariable int id) throws UserNotFoundException {
+		try {
+			User user = userService.getUser(id)
+					.orElseThrow(() -> new UserNotFoundException("uSER NOT FOUND WITH ID: " + id));
+
+			return new ResponseEntity<>(user, HttpStatus.OK);
+
+		} catch (Exception e) {
+			ErrorResponse userNotFound= new ErrorResponse(LocalDateTime.now(), e.getMessage(), "User not found");
+			return new ResponseEntity<>(userNotFound, HttpStatus.NOT_FOUND);
+		}
+
+-> Here the ErrorResponse is the class with the attributes localtime,message and details.
+-> So this is the traditional way of handling exception for the API.
+
+Exception Handler
+=================
+-> Now if we have list of many apis with the same exception throwing then its hard to write the try catch and response for each of the api 
+-> There is way to handle this using Exception handlers.
+-> Here we wrirt only one exception handler for each exception in the controller so when any exception from the api of that controller is thrown
+the Exception handler will handle the exception instead of each api handling it 
+-> Here is the way to do it 
+
+	@ExceptionHandler
+	public ResponseEntity<?> handleUserNotFoundException(UserNotFoundException exception) {
+		ErrorResponse userNotFound = new ErrorResponse(LocalDateTime.now(), exception.getMessage(), "User not found");
+		return new ResponseEntity<>(userNotFound, HttpStatus.NOT_FOUND);
+	}
+
+Contoller Advice
+================
+-> Lets say we have a exception throwing from the API of another controller .
+-> In this case we it will not be handled by the exception handler of the previous controller.
+-> Here again we need to define the Exception Handler in the current controller.
+-> Instead of defining the Exception Handler in each  of the controller we can define one exception handler globally using controller advice
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+	@ExceptionHandler
+	public ResponseEntity<?> handleUserNotFoundException(UserNotFoundException exception) {
+		ErrorResponse userNotFound = new ErrorResponse(LocalDateTime.now(), exception.getMessage(), "User not found");
+		return new ResponseEntity<>(userNotFound, HttpStatus.NOT_FOUND);
+	}
+}
+-> Now here this exception handler will handle the usernotfound exception globaly.
+-> So here we dont need to define exception handlers in every controllers.
+->  but when we want to retrun the string instead of response entity then we can use @RestControllerAdvice annotation
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+	@ExceptionHandler
+	public String handleUserNotFoundException(UserNotFoundException exception) {
+		return "Error";
+	}
+}
+
+
+

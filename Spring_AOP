@@ -20,4 +20,75 @@ After Throwing Advice: Executed if a method exits by throwing an exception.
 Around Advice: Surrounds a join point, allowing you to perform actions before and after the method execution.
 
 Pointcut: A predicate that matches join points. Advice is associated with a pointcut expression and runs at any join point matched by the pointcut.
+AOP Proxies
+===========
+In Spring AOP, proxies are a key mechanism used to implement aspect-oriented programming. Here's a breakdown of how AOP proxies work:
 
+What is an AOP Proxy?
+An AOP proxy is an object created by the AOP framework to implement the aspect contracts. It wraps the target object and intercepts method calls to apply the advice defined in the aspects.
+
+Types of AOP Proxies
+====================
+JDK Dynamic Proxies: These are used when the target object implements one or more interfaces. The proxy object implements the same interfaces as the target object and delegates method calls to the target object.
+CGLIB Proxies: These are used when the target object does not implement any interfaces. CGLIB (Code Generation Library) creates a subclass of the target object and overrides its methods to apply the advice.
+How AOP Proxies Work
+Proxy Creation: When a bean is created in the Spring container, the AOP framework checks if any aspects need to be applied. If so, it creates a proxy for the bean.
+Method Interception: When a method on the proxy object is called, the proxy intercepts the call and applies the advice before, after, or around the method execution.
+Delegation: After applying the advice, the proxy delegates the method call to the target object.
+Example
+=======
+Here's a simple example to illustrate the concept:
+
+public interface MyService {
+    void performTask();
+}
+
+public class MyServiceImpl implements MyService {
+    public void performTask() {
+        System.out.println("Performing task...");
+    }
+}
+
+@Aspect
+public class LoggingAspect {
+    @Before("execution(* com.example.MyService.performTask(..))")
+    public void logBefore(JoinPoint joinPoint) {
+        System.out.println("Logging before method: " + joinPoint.getSignature().getName());
+    }
+}
+
+// Configuration
+@Configuration
+@EnableAspectJAutoProxy
+public class AppConfig {
+    @Bean
+    public MyService myService() {
+        return new MyServiceImpl();
+    }
+
+    @Bean
+    public LoggingAspect loggingAspect() {
+        return new LoggingAspect();
+    }
+}
+In this example:
+
+MyService is the target interface.
+MyServiceImpl is the target object.
+LoggingAspect is the aspect that contains advice to log before the performTask method.
+The Spring container creates a proxy for MyServiceImpl and applies the LoggingAspect advice.
+
+@Around
+=======
+Purpose: Allows you to execute custom behavior before and after a method call.
+Usage: Annotate a method in your aspect class with @Around and use ProceedingJoinPoint to control the method execution.
+Example: Measure execution time of a method.
+@Around("execution(* com.example.MyService.performTask(..))")
+public Object measureExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
+    long start = System.currentTimeMillis();
+    Object result = joinPoint.proceed();
+    long executionTime = System.currentTimeMillis() - start;
+    System.out.println(joinPoint.getSignature() + " executed in " + executionTime + "ms");
+    return result;
+}
+This advice logs the execution time of the performTask method.

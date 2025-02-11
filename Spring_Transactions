@@ -85,6 +85,7 @@ public void performTransaction() {
 
 2. Programmatic
 ===============
+
 To programmatically manage transactions in Spring Boot, you can use the PlatformTransactionManager and TransactionTemplate classes. Here's a step-by-step guide:
 Inject the Transaction Manager: First, inject the PlatformTransactionManager into your service or component.
 
@@ -152,11 +153,140 @@ public void performTransaction() {
     });
 }
 
+Transaction Propagations
+========================
+Transaction propagation refers to how transactions behave when a method annotated with @Transactional 
+is called by another method that may or may not have an active transaction.
+. REQUIRED
+. SUPPORTS
+. MANDATORY
+. REQUIRED_NEW
+. NOT_SUPPORTED
+. NEVER
+. NESTED
+-> When we dont have propagation by default it will required 
+@Transactional(propagation = Propagation.REQUIRED)
 
+REQUIRED
+========
+-> Lets say we have controller addBook method calling service method BookService.addBook
+-> We will have two scenarios 
+1. controller donnot have trasaction but service method have transaction
+-> In this case after controller method calls the service method the trasaction will be started as it have transaction.
+2. If controller method have transaction
+-> then it will start the transaction and same transaction will be continued by the service method transaction.
+REQUIRED_NEW
+============
+-> A new Transaction is created by the method 
+@Transactional(propagation = Propagation.REQUIRED_NEW)
+-> Lets say controller method have transaction and service method have transaction with propagation as REQUIRED_NEW
+-> In this case when Controller method is invoked a transaction is created and when it calls service
+then a new trasaction is created as propagation is REQUIRED_NEW.
+MANDATORY
+=========
+@Transactional(propagation=Propagation.MANDATORY
+-> This is used when we want to enforce that there should not be any new transaction created 
+-> Rather things should work in the existing transaction that is already present.
+-> When there is no exsiting transaction going on then it will throw exception.
+NESTED
+======
+-> If we have existing transaction then it will create a nested transaction 
+-> which means it will create another transaction which is savepoint.
+-> if any exception occurs in the nested exception then it will rollback until the save point but before the save point it will not rolled back
+-> If there is no exsiting transaction then it works as REQUIRED propagation.
+-> It is used only when we want do a partial rollbacks.
+SUPPORTS
+========
+-> when we have a transaction in calling method then it will support the transaction in the called method.
+-> when we dont have transaction in the calling method then the called method will also dont create the transaction.
+NOT_SUPPORTED
+=============
+When callingMethod is executed, a transaction is started.
+When calledMethod is invoked, the current transaction is suspended, and calledMethod runs without a transaction.
+After calledMethod completes, the original transaction is resumed, and the remaining code in callingMethod continues within the original transaction context.
+NEVER
+=====
+When callingMethod is executed, a transaction is started.
+When calledMethod is invoked, Spring checks for an existing transaction.
+Since calledMethod is annotated with Propagation.NEVER, an exception is thrown if there is an active transaction.
 
-  
+Transaction isolation
+=====================
+@Transactional(isolation = Isolation.SERIALIZABLE)
 
+Dirty reads:
+============
+A dirty read occurs when a transaction reads data that has been modified by another transaction but not yet 
+committed. If the other transaction rolls back, the data read by the first transaction becomes invalid.
+Example:
+========
+Transaction A updates a record but hasn't committed the change.
+Transaction B reads the updated record.
+Transaction A rolls back its changes.
+Now, Transaction B has read data that doesn't exist anymore, leading to inconsistency.
 
+Phantom Reads
+=============
+A phantom read occurs when a transaction reads a set of rows that match a condition, but another
+transaction inserts or deletes rows that match the same condition before the first transaction completes. 
+This causes the first transaction to see different sets of rows if it re-executes the same query.
+Example:
+========
+Transaction A reads all rows where status = 'active'.
+Transaction B inserts a new row with status = 'active' and commits.
+Transaction A re-reads the rows where status = 'active' and sees the new row,
+which wasn't there before, causing inconsistency.
+
+Non-Repeatable Reads
+====================
+A non-repeatable read occurs when a transaction reads the same row 
+twice and gets different data each time because another transaction has modified the row in between the two reads.
+Example:
+========
+Transaction A reads a row.
+Transaction B updates the same row and commits.
+Transaction A reads the same row again and sees the updated data.
+
+Shared Lock (S Lock)
+===================
+A shared lock allows multiple transactions to read a resource (e.g., a row in a database) concurrently.
+However, no transaction can modify the resource while it holds a shared lock.
+-> Used when a transaction needs to read data without modifying it,
+ensuring that the data is not changed by other transactions during the read operation.
+Example:  If Transaction A holds a shared lock on a row, Transaction B can also acquire a shared lock on the same row to read it.
+However, neither transaction can modify the row until both release their shared locks.
+
+Exclusive Lock (X Lock)
+=======================
+An exclusive lock allows only one transaction to both read and modify a resource. 
+No other transaction can read or modify the resource while it holds an exclusive lock.
+-> Used when a transaction needs to modify data, ensuring that no other transaction can read 
+or modify the data until the exclusive lock is released.
+Example: If Transaction A holds an exclusive lock on a row, no other transaction can acquire 
+any lock (shared or exclusive) on that row until Transaction A releases the exclusive lock.
+
+READ_UNCOMMITTED:
+================
+The lowest isolation level. Transactions can read uncommitted changes made by other transactions.
+-> Can lead to dirty reads, non-repeatable reads, and phantom reads.
+-> No locks are used for read operations.
+When it cant avoid any issues why is it used ?
+---------------------------------------------
+READ_UNCOMMITTED can offer better performance because it doesn't require the overhead of acquiring
+and maintaining locks. This can be beneficial in read-heavy applications where data consistency is less critical.
+
+READ_COMMITTED:
+===============
+Transactions can only read committed changes made by other transactions.
+-> Prevents dirty reads but can still have non-repeatable reads and phantom reads.
+REPEATABLE_READ:
+================
+Ensures that if a transaction reads a row, subsequent reads will return the same data, even if other transactions modify it.
+-> Prevents dirty reads and non-repeatable reads but can still have phantom reads.
+SERIALIZABLE:
+=============
+The highest isolation level. Transactions are completely isolated from each other, as if they were executed serially.
+-> Prevents dirty reads, non-repeatable reads, and phantom reads but can significantly impact performance.
 
 
 

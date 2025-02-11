@@ -1,1 +1,56 @@
+Spring Transactions
+==================
+-> When multiple requests try to access this critiacl section, data inconsistency can happen.
+-> Lets say five passengers are trying to access same window seat in a flight booking there are chances of data inconsistency.
+-> Solution is trasaction which helps to achive ACID properties
+ACID
+Atomicity: Ensures all operayions in trascation are completed succesfully.If any operation fails then entire trasaction is rolled back.
+Consistency: Ensures the DB state before and after the trasaction is consistent.
+Isolation: Ensures that, if multiple trasactions are runnning in parllel,they do not intefere with each other.
+Duarability: Ensures that commited trasaction will never be lost despite of system failures.
+
+BEGIN_TRASACTION
+        -Debit from A
+        -Credit to B
+        If All Success
+             COMMIT;
+         Else:
+             ROLLBACK;
+END_TRASACTION
+
+@Trasactional
+=============
+-> In critical request cases we use @Trasactional anotation on the top of the critical methdod in the service.
+-> We can also use the annotation in class level where we can use it on the top of the class which will be applied to the all services in the service class.
+-> If we have private methods then the @Trasactional annotation will not be applicable to the private methods in the service.
+-> Even if we use @Trasactional on the private method its of no use.
+
+Trasaction Management in spring uses AOP
+========================================
+-> Uses pointcut expression to search for methods having @Trasactional annotation.
+@within("org.springframework.trasaction.annotation.Transactional")
+-> Once pointcut expression matches, run an "Around" type advice.
+invokeWithinTransaction method present in TrasactionInterceptor class
+-> Here TrasactionInterceptor class will
+  1.Create Transaction
+  2.Invoke Method
+  3.Commit/Rollback Transaction
+-> Internally the pointcut expression will search for the annotation @Trasaction and then it uses aspects and create advices for the service method
+on which the annotation is applied.
+-> Internally it uses after, before or around to create trasaction before the method 
+and after the method to create the trasaction, ro rollback the trasaction when any ecxception occurs 
+and to commit the trasaction.
+
+Transaction Managers
+====================
+
+
+
+
+
+
+
+
+
+
 

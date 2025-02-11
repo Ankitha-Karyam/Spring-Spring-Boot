@@ -44,6 +44,118 @@ and to commit the trasaction.
 Transaction Managers
 ====================
 
+TransactionManager
+   (Interface)
+        | extends
+PlatformTransactionManager ___ getTransaction,commit,rollback
+   (interface)
+        |
+AbstractPlatformTransactionManager___ getTransaction,commit,rollback(implementation)
+(abstract class)
+        |
+ (concrete classes)
+DataSource Transaction Manager (JDBC Transaction),
+Hibernate Transaction Manager,
+JPA Transaction Manager,
+JTA Trasaction Manager ( 2 phase commits)
+-> There are two types of transaction managers
+1. Declarative
+==============
+-> Transaction Management Through Annotations
+-> @Transactional
+-> Spring boot will choose appropraite transaction manager.
+-> We can create explicit transaction manager and tell spring to choose that.
+
+Custom Configuration
+You can also define your own transaction manager bean if you need custom settings.
+
+@Bean
+public PlatformTransactionManager transactionManager(EntityManagerFactory emf) {
+    JpaTransactionManager transactionManager = new JpaTransactionManager();
+    transactionManager.setEntityManagerFactory(emf);
+    return transactionManager;
+}
+-> The transaction manager is used behind the scenes when you annotate your methods with @Transactional. It handles the beginning, committing, and rolling back of transactions.
+-> If you have multiple data sources, you can configure multiple transaction managers and specify which one to use with the @Transactional annotation.
+
+@Transactional(transactionManager = "transactionManager1")
+public void performTransaction() {
+    // Your transactional code here
+}
+
+2. Programmatic
+===============
+To programmatically manage transactions in Spring Boot, you can use the PlatformTransactionManager and TransactionTemplate classes. Here's a step-by-step guide:
+Inject the Transaction Manager: First, inject the PlatformTransactionManager into your service or component.
+
+@Service
+public class MyService {
+    private final PlatformTransactionManager transactionManager;
+
+    @Autowired
+    public MyService(PlatformTransactionManager transactionManager) {
+        this.transactionManager = transactionManager;
+    }
+}
+Use TransactionTemplate: Create a TransactionTemplate instance using the injected PlatformTransactionManager.
+
+@Service
+public class MyService {
+    private final TransactionTemplate transactionTemplate;
+
+    @Autowired
+    public MyService(PlatformTransactionManager transactionManager) {
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+    }
+}
+Execute Transaction: Use the TransactionTemplate to execute your transactional code. The execute method takes a TransactionCallback which contains the code to be executed within the transaction.
+
+@Service
+public class MyService {
+    private final TransactionTemplate transactionTemplate;
+
+    @Autowired
+    public MyService(PlatformTransactionManager transactionManager) {
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+    }
+
+    public void performTransaction() {
+        transactionTemplate.execute(status -> {
+            // Your transactional code here
+            // For example, save an entity
+            // myRepository.save(entity);
+
+            // Return a result if needed
+            return null;
+        });
+    }
+}
+Handling Rollback: You can programmatically set the transaction to roll back by calling status.setRollbackOnly() within the execute method.
+
+public void performTransaction() {
+    transactionTemplate.execute(status -> {
+        try {
+            // Your transactional code here
+            // For example, save an entity
+            // myRepository.save(entity);
+
+            // Simulate an error
+            if (someCondition) {
+                throw new RuntimeException("Simulated error");
+            }
+            // Return a result if needed
+            return null;
+        } catch (Exception e) {
+            status.setRollbackOnly();
+            throw e;
+        }
+    });
+}
+
+
+
+  
+
 
 
 

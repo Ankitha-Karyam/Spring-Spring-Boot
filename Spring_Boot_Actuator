@@ -1,0 +1,49 @@
+Production-ready Feautures
+==========================
+Spring Boot includes a number of additional features to help you monitor and manage your application when you push it to production.
+You can choose to manage and monitor your application by using HTTP endpoints or with JMX.
+Auditing,health and metrics gathering can be automatically applied to your application.
+Spring Boot Actuator
+====================
+Spring Boot Actuator is a powerful tool that provides production-ready features to help you monitor
+and manage your Spring Boot application. Here are some key aspects:
+
+Monitoring and Management: Actuator exposes various endpoints that allow you to monitor and interact with your application. 
+These endpoints can provide information on application health, metrics, environment properties, and more12.
+
+Endpoints: Some of the commonly used endpoints include:
+/actuator/health: Shows the health status of your application.
+/actuator/metrics: Displays various metrics related to your application.
+/actuator/env: Exposes properties from the application's environment.
+
+Configuration: To enable Actuator, you need to add the spring-boot-starter-actuator dependency to your project. For Maven:
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+For Gradle:
+
+implementation 'org.springframework.boot:spring-boot-starter-actuator'
+Customization: You can customize which endpoints are enabled and how they are exposed (e.g., via HTTP or JMX). 
+This allows you to tailor the monitoring and management capabilities to your specific needs.
+
+Here's an example configuration for Spring Boot Actuator in a application.properties file:
+
+# Enable all Actuator endpoints
+management.endpoints.web.exposure.include=*
+
+# Customize the base path for Actuator endpoints
+management.endpoints.web.base-path=/actuator
+
+# Enable health endpoint
+management.endpoint.health.enabled=true
+
+# Enable metrics endpoint
+management.endpoint.metrics.enabled=true
+
+# Enable environment endpoint
+management.endpoint.env.enabled=true
+
+# Customize health indicators
+management.health.diskspace.threshold=10MB
+management.health.db.enabled=true

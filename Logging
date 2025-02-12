@@ -1,0 +1,77 @@
+Logging in Spring Boot is straightforward and highly customizable. Here's a quick guide to get you started:
+
+1. Default Logging Configuration
+================================
+Spring Boot uses Logback as the default logging framework. You can configure logging settings in the application.properties or application.yml file.
+
+Example in application.properties:
+# Set the logging level for the root logger
+logging.level.root=INFO
+
+# Set the logging level for a specific package
+logging.level.com.example=DEBUG
+
+# Specify the logging file name
+logging.file.name=app.log
+
+# Specify the logging file path
+logging.file.path=/var/logs
+Example in application.yml:
+logging:
+  level:
+    root: INFO
+    com.example: DEBUG
+  file:
+    name: app.log
+    path: /var/logs
+2. Customizing Logback Configuration
+====================================
+If you need more advanced logging configurations, you can create a logback-spring.xml file in the src/main/resources directory.
+
+Example logback-spring.xml:
+<configuration>
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>app.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="FILE" />
+    </root>
+
+    <logger name="com.example" level="DEBUG" additivity="false">
+        <appender-ref ref="FILE" />
+    </logger>
+</configuration>
+3. Using SLF4J for Logging
+Spring Boot supports SLF4J, which is a simple facade for various logging frameworks. You can use SLF4J in your code as follows:
+
+Example:
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+@Service
+public class MyService {
+    private static final Logger logger = LoggerFactory.getLogger(MyService.class);
+
+    public void performTask() {
+        logger.info("Task started");
+        // Your logic here
+        logger.debug("Task in progress");
+        logger.info("Task completed");
+    }
+}
+4. Logging Levels
+Spring Boot supports several logging levels:
+
+TRACE
+DEBUG
+INFO
+WARN
+ERROR
+FATAL
+OFF
+You can set these levels in your configuration files to control the verbosity of the logs.

@@ -1,0 +1,158 @@
+Spring Batch
+============
+Using Spring Batch: With Spring Batch,you can handle this efficiently and reliably by breaking it down into manageable steps:
+1. Chunck Processing: Spring Batch reads transactions for a few hundred customers at a time,processes them in chunks, and writes them to the statements in bulk.
+2. Sheduled Execution: Set up the job to run during off-peak hours(like late at night),reducing the impact on the banks's primary systems.
+3. Error Handling and Retry: If there's an error while processing a batch, Spring Batch can automatically retry the step or skip the problematic data and continue with the rest,logging any issue for further review.
+4. Restartability: If a job fails midway through generating 10,000 statements,Spring Batch can restart from where it left off, ensuring every customer receives their statement without duplications.
+5. Job Monitoring: With its bulit-in Job repository,Spring Batch tracks each job's progress and stores metadata on completed, in progress, and failed jobs, allowing easy monitoring and troubleshooting.
+
+
+
+Step 1: Set Up Your Project
+Use Spring Initializr to create a new Spring Boot project with the necessary dependencies.
+
+Go to Spring Initializr.
+Select the following options:
+Project: Maven Project
+Language: Java
+Spring Boot: Choose the latest stable version
+Dependencies: Add Spring Batch, Spring Data JPA, and H2 Database
+Click "Generate" to download the project, then unzip it and open it in your favorite IDE.
+Step 2: Add Dependencies
+If you're not using Spring Initializr, manually add the dependencies to your pom.xml:
+
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-batch</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <scope>runtime</scope>
+    </dependency>
+</dependencies>
+Step 3: Create Domain Class
+Define a simple domain class to represent the data.
+
+@Entity
+public class Person {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+   ;
+    private String lastName;
+
+    // Getters and Setters
+}
+Step 4: Create Repository
+Create a repository interface to interact with the database.
+
+public interface PersonRepository extends JpaRepository<Person, Long> {
+}
+Step 5: Configure Batch Job
+Create a configuration class to define your batch job, steps, and readers/writers.
+
+@Configuration
+public class BatchConfig {
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step1, JobExecutionListener listener) {
+        return new JobBuilder("job", jobRepository)
+                .listener(listener)
+                .start(step1)
+                .build();
+    }
+
+    @Bean
+    public Step step1(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new StepBuilder("step1", jobRepository)
+                .<Person, Person>chunk(10, transactionManager)
+                .reader(reader())
+                .processor(processor())
+                .writer(writer(null)) // Pass your EntityManagerFactory bean here
+                .build();
+    }
+
+    @Bean
+    public FlatFileItemReader<Person> reader() {
+        return new FlatFileItemReaderBuilder<Person>()
+                .name("personItemReader")
+                .resource(new ClassPathResource("sample-data.csv"))
+                .delimited()
+                .names(new String[]{"firstName", "lastName"})
+                .fieldSetMapper(new BeanWrapperFieldSetMapper<>() {{
+                    setTargetType(Person.class);
+                }})
+                .build();
+    }
+
+    @Bean
+    public ItemProcessor<Person, Person> processor() {
+        return person -> {
+            person.setFirstName(person.getFirstName().toUpperCase());
+            return person;
+        };
+    }
+
+    @Bean
+    public JpaItemWriter<Person> writer(EntityManagerFactory entityManagerFactory) {
+        return new JpaItemWriterBuilder<Person>()
+                }
+
+    @Bean
+    public JobExecutionListener listener() {
+        return new JobExecutionListenerSupport() {
+            @Override
+            public void afterJob(JobExecution jobExecution) {
+                if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
+                    System.out.println("Job completed successfully");
+                }
+            }
+        };
+    }
+}
+Step 6: Main Application Class
+Create a main class to run your Spring Boot application.
+
+@SpringBootApplication
+public class BatchApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(BatchApplication.class, args);
+    }
+}
+Step 7: Configure Database
+Add the following to your application.properties to configure an in-memory H2 database:
+
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=password
+spring.jpa.hibernate.ddl-auto=update
+spring.batch.initialize-schema=always
+Step 8: Create Sample Data
+Create a sample-data.csv file in the src/main/resources directory with the following content:
+
+firstName,lastName
+John,Doe
+Jane,Smith
+Step 9: Run and Test
+Run your application, and you should see the batch job processing the items and printing the processed output to the console.
+
+
+
+
+
+
+
+
+
+
+
+ 

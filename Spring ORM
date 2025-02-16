@@ -1,0 +1,247 @@
+JDBC API
+========
+Provides a standard interface for connnecting to relational data bases.
+JDBC Drivers
+============
+JDBC - ODBC bridge driver
+Native-API Driver
+Network  Protocol Driver
+Thin Driver (Pure Java Driver)
+Key Components
+==============
+. DriverManager: Manages a list of database drivers.
+. Connection: Represents a connection to a specific database.
+. Statement: Used to execute SQL queries.
+. Prepared Statement: A subclass of statmenmt that allows you to execute parameterized quries.
+. ResultSet: Represents the result set of a query.
+
+Basic Steps to use JDBC
+=======================
+1. Load the JDBC Driver
+Class.forName("com.mysql.cj.jdbc.Driver");
+2. Establish a Connection
+Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydatabase","username","password");
+3. Create statment:
+Statement statement = connection.createStatement();
+4. Excecute a Query:
+ResultSet resultSet = statement.executeQuery("SELECT * FROM MYTABLE");
+5. Process the Result Set:
+while(resultSet.next()){
+System.out.println(resultSet.getString("column1"));
+}
+6. Close the resources:
+resultSet.close();
+statement.close();
+connection.close();
+
+Object-Relational Mapping (ORM) is a programming technique used to convert data between a relational database and an object-oriented programming language. This creates a virtual object database that can be used within the programming language12.
+ORM tools simplify database interactions by allowing developers to work with database records as if they were objects in their code. This means you can perform operations like creating, reading, updating, and deleting (CRUD) data without writing raw SQL queries2.
+Life cycle of Entity manager
+=====================
+Transient -> Persistent By calling persist() or save()
+Persistent-> Detached by calling detach() or when the EntityManager closes
+Persistent-> Removed By calling remove()
+Detached -> Persistent By calling merge()
+
+Some popular ORM tools include:
+Hibernate for Java
+Django ORM for Python
+Entity Framework for .NET
+SQLAlchemy for Python2
+Hibernate: One of the most popular and mature ORM frameworks for Java. It provides a comprehensive solution for mapping Java objects to database tables and supports various databases1
+Spring Data JPA: Part of the Spring Framework, it simplifies data access by providing a repository abstraction over JPA. It integrates seamlessly with Spring applications1.
+
+-> Hibernate is the implementation of Java Persistence API(JPA)
+-> JPA intenally uses JDBC and Hibernate
+
+Spring Boot APP
+================
+Spring Data JPA
+      |
+Java Pesistance API
+      |
+  Hibernate
+      |
+     JDBC
+
+Spring Data JPA Relationships
+=============================
+=> To add foreign key in the entity class we can use @JoinColumn(name="applicationId", nullable=null)
+
+One-to-One:
+===========
+This relationship means that one entity is related to exactly one other entity.
+For example, a User entity might have a one-to-one relationship with a Profile entity.
+
+@Entity
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToOne
+    @JoinColumn(name = "profile_id")
+    private Profile profile;
+}
+
+To create a bidirectional one-to-one relationship in Spring Data JPA, you need to define the relationship in both entities and specify the owning side. Here's an example:
+
+@Entity
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Profile profile;
+
+    // getters and setters
+}
+Profile Entity:
+
+@Entity
+public class Profile {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    // getters and setters
+}
+
+Here it may have circilar dependecy which is due to bidirectionl mapping
+-> Here we can use @JsonIgnore
+
+OneToMany and ManyToOne
+=======================
+In JPA, OneToMany and ManyToOne relationships are used to model associations between entities where one entity can be related to multiple instances of another entity, and vice versa. Here's a detailed explanation with examples:
+
+One-to-Many Relationship
+A OneToMany relationship means that one entity is related to multiple instances of another entity. For example, a Department can have many Employees.
+
+Department Entity:
+
+@Entity
+public class Department {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Employee> employees = new ArrayList<>();
+
+    // getters and setters
+}
+Employee Entity:
+
+@Entity
+public class Employee {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private Department department;
+
+    // getters and setters
+}
+In this example:
+
+The Department entity has a OneToMany relationship with the Employee entity, with mappedBy = "department" indicating that the Employee entity owns the relationship.
+The Employee entity has a ManyToOne relationship with the Department entity, with @JoinColumn(name = "department_id") specifying the foreign key column.
+Many-to-One Relationship
+A ManyToOne relationship is the inverse of a OneToMany relationship. It means that multiple instances of one entity are related to a single instance of another entity. In the example above, each Employee belongs to one Department.
+
+Key Points
+Owning Side: The ManyToOne side is the owning side of the relationship. This is where the foreign key is defined.
+Inverse Side: The OneToMany side is the inverse side of the relationship. It uses the mappedBy attribute to indicate the field that owns the relationship.
+Cascading: You can use cascading to propagate operations from the parent entity to the child entities. For example, if you delete a Department, all associated Employees can be automatically deleted.
+Example Usage
+Here's how you might use these entities in a service or repository:
+
+// Creating a new department and employees
+Department department = new Department();
+Employee employee1 = new Employee();
+Employee employee2 = new Employee();
+
+employee1.setDepartment(department);
+employee2.setDepartment(department);
+
+department.getEmployees().add(employee1);
+department.getEmployees().add(employee2);
+
+// Save the department (cascading will save the employees)
+departmentRepository.save(department);
+This setup ensures that the relationships are properly managed and that operations on the parent entity are cascaded to the child entities.
+
+
+ManyToMany
+==========
+A ManyToMany relationship in JPA means that multiple instances of one entity are related to multiple instances of another entity. This type of relationship is often used to model scenarios like students enrolling in multiple courses, and each course having multiple students.
+
+Here's how you can define a ManyToMany relationship in JPA:
+
+Example: Students and Courses
+Student Entity:
+
+@Entity
+public class Student {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToMany
+    @JoinTable(
+        name = "student_course",
+        joinColumns = @JoinColumn(name = "student_id"),
+        inverseJoinColumns = @JoinColumn(name = "course_id")
+    )
+    private List<Course> courses = new ArrayList<>();
+
+    // getters and setters
+}
+Course Entity:
+
+@Entity
+public class Course {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToMany(mappedBy = "courses")
+    private List<Student> students = new ArrayList<>();
+
+    // getters and setters
+}
+Key Points
+Join Table: The @JoinTable annotation is used to define the join table that holds the foreign keys of both entities. In this example, the join table is named student_course, with student_id and course_id as the foreign key columns.
+
+Owning Side: The Student entity is the owning side of the relationship, as it defines the @JoinTable annotation. The Course entity uses the mappedBy attribute to indicate that the Student entity owns the relationship.
+
+Bidirectional Relationship: This setup allows you to navigate the relationship from both sides. You can access the courses a student is enrolled in and the students enrolled in a course.
+
+Example Usage
+Here's how you might use these entities in a service or repository:
+
+// Creating new students and courses
+Student student1 = new Student();
+Student student2 = new Student();
+Course course1 = new Course();
+Course course2 = new Course();
+
+student1.getCourses().add(course1);
+student1.getCourses().add(course2);
+student2.getCourses().add(course1);
+
+course1.getStudents().add(student1);
+course1.getStudents().add(student2);
+course2.getStudents().add(student1);
+
+// Save the students (cascading will save the courses if configured)
+studentRepository.save(student1);
+studentRepository.save(student2);
+This setup ensures that the relationships are properly managed and that operations on one side of the relationship are reflected on the other side.

@@ -1,0 +1,85 @@
+@SpringBootApplication: Combines @Configuration, @EnableAutoConfiguration, and @ComponentScan to simplify configuration.
+
+@RestController: Combines @Controller and @ResponseBody to simplify RESTful web services.
+
+@RequestMapping: Maps HTTP requests to handler methods in controllers.
+
+@GetMapping, @PostMapping, @PutMapping, @DeleteMapping: Specialized versions of @RequestMapping for specific HTTP methods.
+
+@Autowired: Used for automatic dependency injection.
+
+@Value: Injects values into fields from a properties file.
+
+@Bean: Indicates that a method produces a bean to be managed by the Spring container.
+
+@ConfigurationProperties: Binds external properties to a Java object.
+
+@EnableAutoConfiguration: Enables Spring Boot’s auto-configuration mechanism.
+
+@Transactional: Indicates that a method or class should be wrapped in a database transaction.
+
+@Component: Indicates that a class is a Spring component.
+
+@Service: Indicates that a class is a service component.
+
+@Repository: Marks a class as a data repository.
+
+@Controller: Marks a class as a Spring MVC controller.
+
+@PropertySource: Specifies the location of properties files.
+
+@Profile: Indicates that a component is eligible for registration when one or more specified profiles are active.
+
+@EnableJpaRepositories: Enables JPA repositories.
+
+@EntityScan: Configures the base packages used by JPA entities.
+
+@EnableTransactionManagement: Enables Spring’s annotation-driven transaction management.
+
+@ConditionalOnProperty: Configures beans based on the presence of a property.
+
+@ConditionalOnClass: Configures beans based on the presence of a class.
+
+@ConditionalOnMissingBean: Configures beans only if a specific bean is not already defined.
+
+@ConditionalOnBean: Configures beans based on the presence of another bean.
+
+@ConditionalOnWebApplication: Configures beans only if the application is a web application.
+
+@ConditionalOnNotWebApplication: Configures beans only if the application is not a web application.
+
+@CrossOrigin: Enables cross-origin resource sharing (CORS) on a method or class.
+
+@ExceptionHandler: Handles exceptions thrown by controller methods.
+
+@ControllerAdvice: Provides global exception handling for controllers.
+
+@ResponseStatus: Marks a method or exception class with a status code.
+
+@SpringBootTest: Used for Spring Boot testing.
+
+@MockBean: Creates and injects a mock bean into the Spring application context.
+
+@SpyBean: Creates and injects a spy bean into the Spring application context.
+
+@ConditionalOnExpression: Configures beans based on the evaluation of a SpEL expression.
+
+@ConditionalOnJava: Configures beans based on the version of Java.
+
+@ConditionalOnResource: Configures beans based on the presence of a resource.
+
+@ConditionalOnCloudPlatform: Configures beans based on the presence of a specific cloud platform.
+
+@Import: Imports additional configuration classes.
+
+@ImportResource: Imports XML configuration files.
+
+@Lazy: Marks a bean to be lazily initialized.
+
+@Primary: Indicates that a bean should be given preference when multiple candidates are qualified to autowire a single-valued dependency.
+
+@Scope: Configures the scope of a bean.
+
+@SessionScope: Specifies that a bean is session-scoped.
+
+@RequestScope: Specifies that a bean is request-scoped.

@@ -1,0 +1,81 @@
+Spring Interceptors are a powerful feature in the Spring Framework, often used to intercept and manipulate HTTP requests and responses in a web application.
+They are similar to Servlet Filters but provide more fine-grained control and are specific to the Spring MVC framework.
+
+Here are some key points about Spring Interceptors:
+
+Pre-processing and Post-processing: Interceptors can perform operations before the request reaches the controller (pre-processing)
+and after the controller has processed the request (post-processing).
+
+HandlerInterceptor Interface: To create an interceptor, you implement the HandlerInterceptor interface, which has three main methods:
+
+preHandle(): Called before the request is handled by the controller.
+postHandle(): Called after the controller has processed the request but before the view is rendered.
+afterCompletion(): Called after the complete request has finished, including rendering the view.
+Configuration: Interceptors are configured in the Spring configuration file (XML or Java-based configuration). You can specify which URLs the interceptor should apply to.
+
+Use Cases:
+=========
+Common use cases for interceptors include logging, authentication, authorization, and modifying request/response objects.
+
+1. Import Statements
+====================
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+These imports bring in the necessary classes for handling HTTP requests and responses, as well as logging.
+2. Class Definition
+===================
+public class LoggingInterceptor implements HandlerInterceptor {
+    private static final Logger logger = LoggerFactory.getLogger(LoggingInterceptor.class);
+The LoggingInterceptor class implements the HandlerInterceptor interface.
+A Logger instance is created to log messages.
+3. Pre-Handle Method
+====================
+@Override
+public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    logger.info("Incoming request data: URL = {}, Method = {}, IP = {}", request.getRequestURL(), request.getMethod(), request.getRemoteAddr());
+    return true; // Continue with the next interceptor or the handler
+}
+The preHandle method is called before the request reaches the controller.
+It logs the URL, HTTP method, and IP address of the incoming request.
+Returning true allows the request to proceed to the next interceptor or the controller.
+4. Post-Handle Method
+=====================
+@Override
+public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+    logger.info("Outgoing response status: {}", response.getStatus());
+}
+The postHandle method is called after the controller has processed the request but before the view is rendered.
+It logs the HTTP status of the outgoing response.
+5. After-Completion Method
+==========================
+@Override
+public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+    if (ex != null) {
+        logger.error("Request completed with exception: ", ex);
+    } else {
+        logger.info("Request completed successfully");
+    }
+}
+The afterCompletion method is called after the entire request has finished, including rendering the view.
+It logs whether the request completed successfully or with an exception.
+Configuration
+To use this interceptor, you need to register it in your Spring configuration:
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new LoggingInterceptor());
+    }
+}
+The WebConfig class implements WebMvcConfigurer and overrides the addInterceptors method.
+The LoggingInterceptor is added to the interceptor registry, making it active for all incoming requests.
+This setup ensures that every request and response is logged, providing valuable information for monitoring and debugging your application.
